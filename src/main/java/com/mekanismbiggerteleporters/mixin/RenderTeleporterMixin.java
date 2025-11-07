@@ -30,7 +30,7 @@ import java.util.Map;
 public class RenderTeleporterMixin {
 
     @Unique
-    private static final Map<String, Model3D> biggerTeleporters$extendedModelCache = new HashMap<>();
+    private static final Map<String, Model3D> extendedModelCache = new HashMap<>();
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void renderExtendedPortal(TileEntityTeleporter tile, float partialTick, PoseStack matrix,
@@ -46,7 +46,7 @@ public class RenderTeleporterMixin {
                 return;
             }
 
-            Model3D model = biggerTeleporters$getExtendedOverlayModel(
+            Model3D model = getExtendedOverlayModel(
                     tile.frameDirection(),
                     tile.frameRotated(),
                     width,
@@ -61,7 +61,7 @@ public class RenderTeleporterMixin {
                     LightTexture.FULL_BRIGHT,
                     overlayLight,
                     FaceDisplay.FRONT,
-                    biggerTeleporters$getCamera(),
+                    getCamera(),
                     tile.getBlockPos()
             );
 
@@ -72,14 +72,14 @@ public class RenderTeleporterMixin {
     }
 
     @Unique
-    private Model3D biggerTeleporters$getExtendedOverlayModel(@Nullable Direction direction, boolean rotated,
+    private Model3D getExtendedOverlayModel(@Nullable Direction direction, boolean rotated,
                                                               int width, int height) {
         if (direction == null) {
             direction = Direction.UP;
         }
 
         String cacheKey = direction + "_" + rotated + "_" + width + "_" + height;
-        Model3D model = biggerTeleporters$extendedModelCache.get(cacheKey);
+        Model3D model = extendedModelCache.get(cacheKey);
 
         if (model == null) {
             model = new Model3D().setTexture(MekanismRenderer.teleporterPortal);
@@ -145,7 +145,7 @@ public class RenderTeleporterMixin {
                 }
             }
 
-            biggerTeleporters$extendedModelCache.put(cacheKey, model);
+            extendedModelCache.put(cacheKey, model);
         }
 
         return model;
@@ -153,7 +153,7 @@ public class RenderTeleporterMixin {
 
 
     @Unique
-    private net.minecraft.client.Camera biggerTeleporters$getCamera() {
+    private net.minecraft.client.Camera getCamera() {
         try {
             Field field = RenderTeleporter.class.getSuperclass().getDeclaredField("camera");
             field.setAccessible(true);
@@ -165,6 +165,6 @@ public class RenderTeleporterMixin {
 
     @Inject(method = "resetCachedModels", at = @At("RETURN"))
     private static void clearExtendedCache(CallbackInfo ci) {
-        biggerTeleporters$extendedModelCache.clear();
+        extendedModelCache.clear();
     }
 }

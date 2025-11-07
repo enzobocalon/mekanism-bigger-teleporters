@@ -6,14 +6,16 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import mekanism.common.tile.TileEntityTeleporter;
 import mekanism.common.tile.base.TileEntityMekanism;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.network.PacketDistributor;
 import network.PacketPortalAreaFX;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,9 +31,6 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
     public TeleporterMixin(BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
         super(null, pos, state);
     }
-
-    @Shadow
-    private Direction frameDirection;
 
     @Shadow
     private boolean frameRotated;
@@ -54,8 +53,81 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
     private int lastCheckTick = 0;
 
     /**
-     * Detects frame direction and size for bigger teleporters.
+     * Find the normal direction of the teleporter surface.
      */
+    @Unique
+    private static @Nullable Direction calculateTeleporterNormalDirection(AABB box, BlockPos target) {
+        double X = box.maxX - box.minX;
+        double Y = box.maxY - box.minY;
+        double Z = box.maxZ - box.minZ;
+
+        Direction normalDir = null;
+
+        if (Z < X && Z < Y) {
+            normalDir = (target.getZ() > box.minZ + Z / 2) ? Direction.SOUTH : Direction.NORTH;
+        } else if (X < Y && X < Z) {
+            normalDir = (target.getX() > box.minX + X / 2) ? Direction.EAST : Direction.WEST;
+        } else if (Y < X && Y < Z) {
+            normalDir = (target.getY() > box.minY + Y / 2) ? Direction.UP : Direction.DOWN;
+        }
+
+        return normalDir;
+    }
+
+    /**
+     * Align player rotation when teleporting.
+     */
+    @Inject(method = "alignPlayer", at = @At("HEAD"), cancellable = true)
+    private static void alignPlayerForBiggerPortals(ServerPlayer player, BlockPos target, TileEntityTeleporter teleporter, CallbackInfoReturnable<Float> cir) {
+        Direction side = null;
+
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        Level level = teleporter.getLevel();
+        Direction frameDir = teleporter.frameDirection();
+
+        if (frameDir == null) {
+            return;
+        }
+        if (level != null) {
+            AABB box = teleporter.getTeleporterBoundingBox(frameDir);
+
+            if (box != null) {
+                Direction normal = calculateTeleporterNormalDirection(box, target);
+                if (normal != null) {
+                    mutable.setWithOffset(target, normal.getStepX(), normal.getStepY(), normal.getStepZ());
+                    if (level.isEmptyBlock(mutable)) {
+                        side = normal;
+                    } else {
+                        Direction opposite = normal.getOpposite();
+                        mutable.setWithOffset(target, opposite.getStepX(), opposite.getStepY(), opposite.getStepZ());
+                        if (level.isEmptyBlock(mutable)) {
+                            side = opposite;
+                        }
+                    }
+                }
+            }
+        }
+
+        float yaw;
+        if (side == null) {
+            yaw = player.getYRot();
+        } else {
+            yaw = switch (side) {
+                case NORTH -> 180.0F;
+                case SOUTH -> 0.0F;
+                case WEST -> 90.0F;
+                case EAST -> 270.0F;
+                default -> player.getYRot();
+            };
+        }
+
+        cir.setReturnValue(yaw);
+    }
+
+
+    /**
+         * Detects frame direction and size for bigger teleporters.
+         */
     @Inject(method = "getFrameDirection", at = @At("HEAD"), cancellable = true)
     private void getExtendedFrameDirection(CallbackInfoReturnable<Direction> cir) {
         Long2ObjectMap<ChunkAccess> chunkMap = new Long2ObjectArrayMap<>(3);
@@ -170,6 +242,9 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
         return true;
     }
 
+    /**
+     * Calculates extended bounding box for bigger teleporters.
+     */
     @Inject(method = "getTeleporterBoundingBox", at = @At("HEAD"), cancellable = true)
     private void getExtendedBoundingBox(@NotNull Direction frameDirection,
                                         CallbackInfoReturnable<AABB> cir) {
@@ -283,7 +358,6 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
 
             AABB box = getTeleporterBoundingBox(frameDirection);
             int particlesCount = BiggerTeleporterUtil.getParticlesCount(tile, box);
-            System.out.println("Particles Count:" + particlesCount);
 
             BlockPos minPos = new BlockPos((int) Math.floor(box.minX), (int) Math.floor(box.minY), (int) Math.floor(box.minZ));
             BlockPos maxPos = new BlockPos((int) Math.ceil(box.maxX), (int) Math.ceil(box.maxY), (int) Math.ceil(box.maxZ));
