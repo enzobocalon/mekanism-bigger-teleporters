@@ -1,0 +1,13 @@
+{
+  "itemGroup.mekanismbiggerteleporter": "Example Mod Tab",
+  "block.mekanismbiggerteleporter.example_block": "Example Block",
+  "item.mekanismbiggerteleporter.example_item": "Example Item",
+
+  "mekanismbiggerteleporter.configuration.title": "Mekanism Bigger Teleporter Configs",
+  "mekanismbiggerteleporter.configuration.section.mekanismbiggerteleporter.common.toml": "Mekanism Bigger Teleporter Configs",
+  "mekanismbiggerteleporter.configuration.section.mekanismbiggerteleporter.common.toml.title": "Mekanism Bigger Teleporter Configs",
+  "mekanismbiggerteleporter.configuration.items": "Item List",
+  "mekanismbiggerteleporter.configuration.logDirtBlock": "Log Dirt Block",
+  "mekanismbiggerteleporter.configuration.magicNumberIntroduction": "Magic Number Text",
+  "mekanismbiggerteleporter.configuration.magicNumber": "Magic Number"
+}
