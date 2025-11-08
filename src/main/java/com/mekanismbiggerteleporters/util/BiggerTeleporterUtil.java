@@ -1,4 +1,4 @@
-package util;
+package com.mekanismbiggerteleporters.util;
 
 import mekanism.common.content.teleporter.TeleporterFrequency;
 import mekanism.common.lib.frequency.FrequencyType;

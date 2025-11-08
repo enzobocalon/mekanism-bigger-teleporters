@@ -8,7 +8,7 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import network.PacketHandler;
+import com.mekanismbiggerteleporters.network.PacketHandler;
 
 @Mod(MekanismBiggerTeleporter.MOD_ID)
 public class MekanismBiggerTeleporter {

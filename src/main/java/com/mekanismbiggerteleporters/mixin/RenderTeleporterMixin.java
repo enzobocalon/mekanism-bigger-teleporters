@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import util.BiggerTeleporterUtil;
+import com.mekanismbiggerteleporters.util.BiggerTeleporterUtil;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package network;
+package com.mekanismbiggerteleporters.network;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.neoforged.bus.api.IEventBus;

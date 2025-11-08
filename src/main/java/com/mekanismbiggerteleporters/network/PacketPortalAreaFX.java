@@ -1,4 +1,4 @@
-package network;
+package com.mekanismbiggerteleporters.network;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
