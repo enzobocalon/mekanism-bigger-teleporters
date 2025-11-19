@@ -16,9 +16,8 @@ public class MekanismBiggerTeleporter
     public static final String MOD_ID = "mekanismbiggerteleporter";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public MekanismBiggerTeleporter(FMLJavaModLoadingContext context)
+    public MekanismBiggerTeleporter()
     {
-        IEventBus modEventBus = context.getModEventBus();
         PacketHandler.init();
     }
 
