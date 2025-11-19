@@ -4,7 +4,7 @@
 
 A Mekanism addon that increases teleporter size up to 23x23.
 
-<img src="https://raw.githubusercontent.com/enzobocalon/mekanism-bigger-teleporters/refs/heads/1.21.1/docs/images/2025-11-07_16.49.32.png" />
+<img src="https://raw.githubusercontent.com/enzobocalon/mekanism-bigger-teleporters/1.21.1/docs/images/2025-11-07_16.49.32.png" />
 
 ## Features
 
