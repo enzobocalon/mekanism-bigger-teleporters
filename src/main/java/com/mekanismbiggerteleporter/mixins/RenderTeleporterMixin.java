@@ -1,0 +1,164 @@
+package com.mekanismbiggerteleporter.mixins;
+
+import com.mekanismbiggerteleporter.util.BiggerTeleporterUtil;
+import com.mojang.blaze3d.vertex.PoseStack;
+import mekanism.client.render.MekanismRenderer;
+import mekanism.client.render.RenderResizableCuboid;
+import mekanism.client.render.tileentity.RenderTeleporter;
+import mekanism.common.tile.TileEntityTeleporter;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.core.Direction;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
+@Mixin(value = RenderTeleporter.class, remap = false)
+public class RenderTeleporterMixin {
+    @Unique
+    private static final Map<String, MekanismRenderer.Model3D> extendedModelCache = new HashMap<>();
+
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void renderExtendedPortal(TileEntityTeleporter tile, float partialTick, PoseStack matrix,
+                                      MultiBufferSource renderer, int light, int overlayLight,
+                                      net.minecraft.util.profiling.ProfilerFiller profiler,
+                                      CallbackInfo ci) {
+        try {
+            int width = BiggerTeleporterUtil.getFrameWidth(tile);
+            int height = BiggerTeleporterUtil.getFrameHeight(tile);
+
+            // Mekanism Default
+            if (width == 3 && height == 4) {
+                return;
+            }
+
+            MekanismRenderer.Model3D model = getExtendedOverlayModel(
+                    tile.frameDirection(),
+                    tile.frameRotated(),
+                    width,
+                    height
+            );
+
+            MekanismRenderer.renderObject(
+                    model,
+                    matrix,
+                    renderer.getBuffer(Sheets.translucentCullBlockSheet()),
+                    MekanismRenderer.getColorARGB(tile.getColor(), 0.75F),
+                    LightTexture.FULL_BRIGHT,
+                    overlayLight,
+                    RenderResizableCuboid.FaceDisplay.FRONT,
+                    getCamera(),
+                    tile.getBlockPos()
+            );
+
+            ci.cancel();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Unique
+    private MekanismRenderer.Model3D getExtendedOverlayModel(@Nullable Direction direction, boolean rotated,
+                                                             int width, int height) {
+        if (direction == null) {
+            direction = Direction.UP;
+        }
+
+        String cacheKey = direction + "_" + rotated + "_" + width + "_" + height;
+        MekanismRenderer.Model3D model = extendedModelCache.get(cacheKey);
+
+        if (model == null) {
+            model = new MekanismRenderer.Model3D().setTexture(MekanismRenderer.teleporterPortal);
+            Direction.Axis renderAxis = direction.getAxis().isHorizontal() ? Direction.Axis.Y : rotated ? Direction.Axis.X : Direction.Axis.Z;
+
+            for (Direction side : Direction.values()) {
+                model.setSideRender(direction, side.getAxis() == renderAxis);
+            }
+
+            // Frame dimensions
+            float halfWidth = (width - 1) / 2.0f;
+            float depth = height - 2;
+
+            // Avoid z-fighting
+            float frameOffset = 0.01f;
+
+            // Depth (portal height)
+            float depthMin, depthMax;
+            if (direction.getAxisDirection() == Direction.AxisDirection.POSITIVE) {
+                depthMin = 1.0f + frameOffset;
+                depthMax = 1.0f + depth + frameOffset;
+            } else {
+                depthMin = -1.0f - depth - frameOffset;
+                depthMax = -1.0f - frameOffset;
+            }
+
+            float widthMin = -halfWidth + 1.0f + frameOffset;
+            float widthMax = halfWidth + frameOffset;
+
+            float portalThicknessMin = 0.46f;
+            float portalThicknessMax = 0.54f;
+
+            switch (direction.getAxis()) {
+                case X -> {
+                    model.xBounds(depthMin, depthMax);
+                    if (rotated) {
+                        model.yBounds(widthMin, widthMax);
+                        model.zBounds(portalThicknessMin, portalThicknessMax);
+                    } else {
+                        model.yBounds(portalThicknessMin, portalThicknessMax);
+                        model.zBounds(widthMin, widthMax);
+                    }
+                }
+                case Y -> {
+                    model.yBounds(depthMin, depthMax);
+                    if (rotated) {
+                        model.xBounds(portalThicknessMin, portalThicknessMax);
+                        model.zBounds(widthMin, widthMax);
+                    } else {
+                        model.xBounds(widthMin, widthMax);
+                        model.zBounds(portalThicknessMin, portalThicknessMax);
+                    }
+                }
+                case Z -> {
+                    model.zBounds(depthMin, depthMax);
+                    if (rotated) {
+                        model.xBounds(portalThicknessMin, portalThicknessMax);
+                        model.yBounds(widthMin, widthMax);
+                    } else {
+                        model.xBounds(widthMin, widthMax);
+                        model.yBounds(portalThicknessMin, portalThicknessMax);
+                    }
+                }
+            }
+
+            extendedModelCache.put(cacheKey, model);
+        }
+
+        return model;
+    }
+
+
+    @Unique
+    private net.minecraft.client.Camera getCamera() {
+        try {
+            Field field = RenderTeleporter.class.getSuperclass().getDeclaredField("camera");
+            field.setAccessible(true);
+            return (net.minecraft.client.Camera) field.get(this);
+        } catch (Exception e) {
+            return net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera();
+        }
+    }
+
+    @Inject(method = "resetCachedModels", at = @At("RETURN"))
+    private static void clearExtendedCache(CallbackInfo ci) {
+        extendedModelCache.clear();
+    }
+}

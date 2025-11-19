@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "com.mekanismbiggerteleporter.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "minVersion": "0.8.5",
+  "refmap": "mixins.schematicenergistics.refmap.json",
+  "mixins": [
+    "RenderTeleporterMixin",
+    "TeleporterMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
