@@ -86,8 +86,6 @@ public class RenderTeleporterMixin {
             // Frame dimensions
             float halfWidth = (width - 1) / 2.0f;
             float depth = height - 2;
-
-            // Avoid z-fighting
             float frameOffset = 0.01f;
 
             // Depth (portal height)
@@ -96,46 +94,25 @@ public class RenderTeleporterMixin {
                 depthMin = 1.0f + frameOffset;
                 depthMax = 1.0f + depth + frameOffset;
             } else {
-                depthMin = -1.0f - depth - frameOffset;
-                depthMax = -1.0f - frameOffset;
+                depthMin = -depth - frameOffset;
+                depthMax = -frameOffset;
             }
 
             float widthMin = -halfWidth + 1.0f + frameOffset;
             float widthMax = halfWidth + frameOffset;
 
-            float portalThicknessMin = 0.46f;
-            float portalThicknessMax = 0.54f;
-
             switch (direction.getAxis()) {
                 case X -> {
+                    setExtendedDimensions(rotated, model::zBounds, model::yBounds, widthMin, widthMax);
                     model.xBounds(depthMin, depthMax);
-                    if (rotated) {
-                        model.yBounds(widthMin, widthMax);
-                        model.zBounds(portalThicknessMin, portalThicknessMax);
-                    } else {
-                        model.yBounds(portalThicknessMin, portalThicknessMax);
-                        model.zBounds(widthMin, widthMax);
-                    }
                 }
                 case Y -> {
+                    setExtendedDimensions(rotated, model::zBounds, model::xBounds, widthMin, widthMax);
                     model.yBounds(depthMin, depthMax);
-                    if (rotated) {
-                        model.xBounds(portalThicknessMin, portalThicknessMax);
-                        model.zBounds(widthMin, widthMax);
-                    } else {
-                        model.xBounds(widthMin, widthMax);
-                        model.zBounds(portalThicknessMin, portalThicknessMax);
-                    }
                 }
                 case Z -> {
+                    setExtendedDimensions(rotated, model::xBounds, model::yBounds, widthMin, widthMax);
                     model.zBounds(depthMin, depthMax);
-                    if (rotated) {
-                        model.xBounds(portalThicknessMin, portalThicknessMax);
-                        model.yBounds(widthMin, widthMax);
-                    } else {
-                        model.xBounds(widthMin, widthMax);
-                        model.yBounds(portalThicknessMin, portalThicknessMax);
-                    }
                 }
             }
 
@@ -145,6 +122,16 @@ public class RenderTeleporterMixin {
         return model;
     }
 
+    @Unique
+    private void setExtendedDimensions(boolean rotated, MekanismRenderer.Model3D.ModelBoundsSetter setter1, MekanismRenderer.Model3D.ModelBoundsSetter setter2,
+                                       float widthMin, float widthMax) {
+        if (rotated) {
+            setExtendedDimensions(false, setter2, setter1, widthMin, widthMax);
+        } else {
+            setter1.set(0.46F, 0.54F);
+            setter2.set(widthMin, widthMax);
+        }
+    }
 
     @Unique
     private net.minecraft.client.Camera getCamera() {

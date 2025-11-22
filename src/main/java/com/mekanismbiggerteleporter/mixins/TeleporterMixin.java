@@ -45,6 +45,8 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
     @Shadow
     private boolean frameRotated;
 
+    @Shadow
+    private @Nullable Direction frameDirection;
 
     @Unique
     private int cachedFrameWidth = -1;
@@ -347,6 +349,23 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
         // Mekanism Default
         this.cachedFrameWidth = 3;
         this.cachedFrameHeight = 4;
+    }
+
+    @Inject(method = "getTeleporterTargetPos", at = @At("HEAD"), cancellable = true)
+    private void getExtendedTeleporterTargetPos(CallbackInfoReturnable<BlockPos> cir) {
+        if (frameDirection == null || (frameRotated && frameDirection.getAxis().isHorizontal())) {
+            return; // Should not teleport to center when teleporter is horizontal
+        }
+
+        AABB box = getTeleporterBoundingBox(frameDirection);
+        if (box != null) {
+            double centerX = Math.floor((box.minX + box.maxX) / 2.0);
+            double centerZ = Math.floor((box.minZ + box.maxZ) / 2.0);
+            int bottomY = (int) Math.floor(box.minY);
+
+            BlockPos targetPos = new BlockPos((int) centerX, bottomY, (int) centerZ);
+            cir.setReturnValue(targetPos);
+        }
     }
 
     @Inject(method = "sendTeleportParticles", at = @At("HEAD"), cancellable = true)
