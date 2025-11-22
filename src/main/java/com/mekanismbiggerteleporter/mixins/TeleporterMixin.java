@@ -316,7 +316,6 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
         double maxY = Math.max(corner1.getY(), corner2.getY()) + 1;
         double maxZ = Math.max(corner1.getZ(), corner2.getZ()) + 1;
 
-        System.out.println("Teleporter Bounding Box: [" + minX + ", " + minY + ", " + minZ + "] to [" + maxX + ", " + maxY + ", " + maxZ + "]");
         AABB boundingBox = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
         cir.setReturnValue(boundingBox);
     }
