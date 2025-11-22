@@ -342,11 +342,9 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
 
     @Inject(method = "getTeleporterTargetPos", at = @At("HEAD"), cancellable = true)
     private void getExtendedTeleporterTargetPos(CallbackInfoReturnable<BlockPos> cir) {
-        System.out.println("frameRotated: " + frameRotated);
         if (frameDirection == null || (frameRotated && frameDirection.getAxis().isHorizontal())) {
             return; // Should not teleport to center when teleporter is horizontal
         }
-        System.out.println(frameDirection + " " + frameDirection.getAxis().isVertical() + " " +frameDirection.getAxis().isHorizontal());
 
         AABB box = getTeleporterBoundingBox(frameDirection);
         if (box != null) {
