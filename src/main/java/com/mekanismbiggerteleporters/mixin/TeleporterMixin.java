@@ -4,14 +4,18 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
+import mekanism.api.event.MekanismTeleportEvent;
 import mekanism.common.tile.TileEntityTeleporter;
 import mekanism.common.tile.base.TileEntityMekanism;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.portal.DimensionTransition;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import com.mekanismbiggerteleporters.network.PacketPortalAreaFX;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +47,7 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
 
     @Shadow public abstract AABB getTeleporterBoundingBox(@NotNull Direction frameDirection);
 
+    @Shadow private @Nullable Direction frameDirection;
     @Unique
     private int cachedFrameWidth = -1;
 
@@ -332,6 +337,26 @@ public abstract class TeleporterMixin extends TileEntityMekanism {
         // Mekanism Default
         this.cachedFrameWidth = 3;
         this.cachedFrameHeight = 4;
+    }
+
+
+    @Inject(method = "getTeleporterTargetPos", at = @At("HEAD"), cancellable = true)
+    private void getExtendedTeleporterTargetPos(CallbackInfoReturnable<BlockPos> cir) {
+        System.out.println("frameRotated: " + frameRotated);
+        if (frameDirection == null || (frameRotated && frameDirection.getAxis().isHorizontal())) {
+            return; // Should not teleport to center when teleporter is horizontal
+        }
+        System.out.println(frameDirection + " " + frameDirection.getAxis().isVertical() + " " +frameDirection.getAxis().isHorizontal());
+
+        AABB box = getTeleporterBoundingBox(frameDirection);
+        if (box != null) {
+            double centerX = Math.floor((box.minX + box.maxX) / 2.0);
+            double centerZ = Math.floor((box.minZ + box.maxZ) / 2.0);
+            int bottomY = (int) Math.floor(box.minY);
+
+            BlockPos targetPos = new BlockPos((int) centerX, bottomY, (int) centerZ);
+            cir.setReturnValue(targetPos);
+        }
     }
 
     @Inject(method = "sendTeleportParticles", at = @At("HEAD"), cancellable = true)
