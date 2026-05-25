@@ -22,7 +22,7 @@ public class PacketHandler {
         registrar.playToClient(
                 PacketPortalAreaFX.TYPE,
                 PacketPortalAreaFX.STREAM_CODEC,
-                PacketPortalAreaFX::handle
+                handler(PacketPortalAreaFX::handle)
         );
     }
 

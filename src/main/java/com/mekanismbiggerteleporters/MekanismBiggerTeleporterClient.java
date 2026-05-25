@@ -1,5 +1,7 @@
 package com.mekanismbiggerteleporters;
 
+import com.mekanismbiggerteleporters.client.ClientPacketHandler;
+import com.mekanismbiggerteleporters.network.ClientPacketDispatcher;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -17,5 +19,7 @@ public class MekanismBiggerTeleporterClient {
     }
 
     @SubscribeEvent
-    static void onClientSetup(FMLClientSetupEvent event) {}
+    static void onClientSetup(FMLClientSetupEvent event) {
+        ClientPacketDispatcher.registerPortalAreaFxHandler(ClientPacketHandler::handlePortalAreaFx);
+    }
 }
