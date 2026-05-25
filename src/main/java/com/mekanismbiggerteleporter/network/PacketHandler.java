@@ -3,9 +3,12 @@ package com.mekanismbiggerteleporter.network;
 import com.mekanismbiggerteleporter.MekanismBiggerTeleporter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
+
+import java.util.Optional;
 
 public class PacketHandler {
     private static final String PROTOCOL_VERSION = "1";
@@ -28,7 +31,8 @@ public class PacketHandler {
                 nextId(), PacketPortalAreaFX.class,
                 PacketPortalAreaFX::toBytes,
                 PacketPortalAreaFX::fromBytes,
-                PacketPortalAreaFX::handle
+                PacketPortalAreaFX::handle,
+                Optional.of(NetworkDirection.PLAY_TO_CLIENT)
         );
     }
 

@@ -5,10 +5,11 @@
   "minVersion": "0.8.5",
   "refmap": "mixins.schematicenergistics.refmap.json",
   "mixins": [
-    "RenderTeleporterMixin",
     "TeleporterMixin"
   ],
-  "client": [],
+  "client": [
+    "RenderTeleporterMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
